@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.*;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -46,17 +44,14 @@ public abstract class LocationService extends Service {
 
     protected abstract float getBestAccuracy();
 
-    @NonNull
     protected abstract String getNotificationTitle();
 
-    @NonNull
     protected abstract String getNotificationText();
 
     protected abstract int getNotificationColor();
 
     protected abstract int getNotificationSmallIcon();
 
-    @NonNull
     protected abstract String getActionTracking();
 
     protected abstract int getMinTime();
@@ -79,7 +74,7 @@ public abstract class LocationService extends Service {
         }
     }
 
-    private void sendOnLocationChangedEvents(@NonNull final Location location) {
+    private void sendOnLocationChangedEvents(final Location location) {
         for (LocationServiceListener listener : locationServiceListenerList) {
             if (location.getAccuracy() <= getBestAccuracy()) {
                 listener.onLocationChanged(location);
@@ -152,7 +147,6 @@ public abstract class LocationService extends Service {
         }
     }
 
-    @NonNull
     protected String getTag() {
         return TAG;
     }
@@ -174,7 +168,6 @@ public abstract class LocationService extends Service {
         startForeground(notification.getId(), builder.build());
     }
 
-    @Nullable
     protected ForegroundNotification getForegroundNotificationSpec() {
         ForegroundNotification notification = new ForegroundNotification();
         notification.setId(getForegroundId());
@@ -213,7 +206,7 @@ public abstract class LocationService extends Service {
         }
     }
 
-    private void logService(@NonNull final String eventLifecycle) {
+    private void logService(final String eventLifecycle) {
         Log.i(getTag(), getTag() + eventLifecycle);
     }
 
@@ -245,7 +238,7 @@ public abstract class LocationService extends Service {
 
         private final String provider;
 
-        LocationListener(@NonNull final String provider) {
+        LocationListener(final String provider) {
             this.provider = provider;
         }
 
@@ -254,7 +247,7 @@ public abstract class LocationService extends Service {
         }
 
         @Override
-        public void onLocationChanged(@NonNull final Location location) {
+        public void onLocationChanged( final Location location) {
             Log.d(TAG, location.getLatitude() + "/" + location.getLongitude());
             sendOnLocationChangedEvents(location);
         }

@@ -12,8 +12,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -38,7 +36,7 @@ public class LocationAPI {
     private final LocationManager locationManager;
     private static List<LocationSdkListener> locationSdkListeners = new ArrayList<>();
 
-    private LocationAPI(@Nullable final Context context) throws LocationException {
+    private LocationAPI(final Context context) throws LocationException {
         if (context == null) {
             throw new LocationException(LocationException.LocationErrorCode.CONTEXT_NULL);
         }
@@ -52,24 +50,24 @@ public class LocationAPI {
         }
     }
 
-    private void setListeners(@NonNull final List<LocationSdkListener> locationSdkListeners) {
+    private void setListeners( final List<LocationSdkListener> locationSdkListeners) {
         LocationAPI.locationSdkListeners = locationSdkListeners;
     }
 
-    public static boolean hasNecessaryPermissions(@NonNull final Context context) {
+    public static boolean hasNecessaryPermissions( final Context context) {
         return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
-    public static void requestLocationPermissions(@NonNull final Activity activity, @NonNull String[] permissions) {
+    public static void requestLocationPermissions( final Activity activity,  String[] permissions) {
         ActivityCompat.requestPermissions(activity, permissions, LocationAPI.REQUEST_CODE_ACCESS_LOCATION);
     }
 
-    public static void checkLocationNecessarySettings(@NonNull final Activity activity,
-                                                      @NonNull final LocationSettingsListener listener,
-                                                      @NonNull final String title,
-                                                      @NonNull final String message,
-                                                      @NonNull final String positiveButtonText) {
+    public static void checkLocationNecessarySettings( final Activity activity,
+                                                       final LocationSettingsListener listener,
+                                                       final String title,
+                                                       final String message,
+                                                       final String positiveButtonText) {
         if (!hasNecessaryPermissions(activity.getBaseContext())) {
             requestLocationPermissions(activity,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION});
@@ -84,7 +82,7 @@ public class LocationAPI {
         }
     }
 
-    public static boolean hasGpsDevice(@NonNull final Context context) {
+    public static boolean hasGpsDevice( final Context context) {
         final LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         if (locationManager == null) {
             return false;
@@ -94,12 +92,12 @@ public class LocationAPI {
         return providers != null && providers.contains(LocationManager.GPS_PROVIDER);
     }
 
-    public static boolean isProviderEnabled(@NonNull final Context context, @NonNull final String provider) {
+    public static boolean isProviderEnabled( final Context context,  final String provider) {
         return ((LocationManager) Objects.requireNonNull(context.getSystemService(Context.LOCATION_SERVICE)))
                 .isProviderEnabled(provider);
     }
 
-    public static boolean isIgnoringBatteryOptimizations(@NonNull final Context context) {
+    public static boolean isIgnoringBatteryOptimizations( final Context context) {
         if (Build.VERSION.SDK_INT >= 23) {
             final String packageName = context.getPackageName();
             final PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
@@ -109,10 +107,10 @@ public class LocationAPI {
         }
     }
 
-    public static void checkIgnoringBatteryOptimizations(@NonNull final Activity activity,
-                                                         @NonNull final String title,
-                                                         @NonNull final String message,
-                                                         @NonNull final String positiveButtonText) {
+    public static void checkIgnoringBatteryOptimizations( final Activity activity,
+                                                          final String title,
+                                                          final String message,
+                                                          final String positiveButtonText) {
         // Necessary to some devices do not know how to treat Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
         try {
             final Intent intent = new Intent();
@@ -132,7 +130,7 @@ public class LocationAPI {
         }
     }
 
-    public static void onRequestPermissionsResult(@NonNull final Activity activity, int requestCode, String permissions[], int[] grantResults, @NonNull final LocationSdkPermission locationSdkPermission) {
+    public static void onRequestPermissionsResult( final Activity activity, int requestCode, String permissions[], int[] grantResults,  final LocationSdkPermission locationSdkPermission) {
         if (requestCode == REQUEST_CODE_ACCESS_LOCATION) {
             for (int index = 0; index < permissions.length; index++) {
                 if (grantResults[index] != PackageManager.PERMISSION_GRANTED) {
@@ -157,13 +155,13 @@ public class LocationAPI {
         }
     }
 
-    private static boolean permissionFirstTimeAsking(@NonNull final Context context) {
+    private static boolean permissionFirstTimeAsking( final Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREFERENCES,
                 Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(KEY_FIRST_TIME_ASK_PERMISSION, true);
     }
 
-    private static void setPermissionFirstTimeAsking(@NonNull final Context context, final boolean firstTimeAsking) {
+    private static void setPermissionFirstTimeAsking( final Context context, final boolean firstTimeAsking) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREFERENCES,
                 Context.MODE_PRIVATE);
         final SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -171,7 +169,7 @@ public class LocationAPI {
         editor.apply();
     }
 
-    private void requestLocationUpdates(@NonNull final LocationSdkListener locationSdkListener) {
+    private void requestLocationUpdates( final LocationSdkListener locationSdkListener) {
         try {
             locationManager.requestLocationUpdates(
                     locationSdkListener.getProvider(), locationSdkListener.getMinTime(),
@@ -193,7 +191,7 @@ public class LocationAPI {
         }
     }
 
-    public static void lastKnowLocation(@NonNull final Activity activity, @NonNull final LocationSdkListener locationSdkListener) {
+    public static void lastKnowLocation( final Activity activity,  final LocationSdkListener locationSdkListener) {
         FusedLocationProviderClient FusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
         FusedLocationClient.getLastLocation().addOnSuccessListener(activity, location -> {
             if (location != null) {
@@ -207,12 +205,12 @@ public class LocationAPI {
         private final Context context;
         private final List<LocationSdkListener> listeners;
 
-        public Builder(@Nullable final Context context) {
+        public Builder(final Context context) {
             this.context = context;
             this.listeners = new ArrayList<>();
         }
 
-        public Builder addListener(@NonNull final LocationSdkListener locationSdkListener) {
+        public Builder addListener( final LocationSdkListener locationSdkListener) {
             listeners.add(locationSdkListener);
             return this;
         }
