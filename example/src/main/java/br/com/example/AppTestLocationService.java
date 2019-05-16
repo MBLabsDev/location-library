@@ -22,7 +22,7 @@ public class AppTestLocationService extends LocationService {
 
         @Override
         public void onLocationChanged( Location location) {
-            Log.d(TAG, "onLocationChanged - " + location.getLatitude() + "/" + location.getLongitude());
+            Log.d(TAG, "onLocationChanged - " + location.getLatitude() + " / " + location.getLongitude());
         }
 
         @Override

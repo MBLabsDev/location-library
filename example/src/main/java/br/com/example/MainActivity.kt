@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
-        }, "", "", "OK")
+        }, "Your title here", "Your message here", "OK")
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {

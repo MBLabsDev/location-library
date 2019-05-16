@@ -3,6 +3,7 @@ package br.com.mblabs.service;
 import android.app.PendingIntent;
 
 public class ForegroundNotification {
+
     private String title;
     private String text;
     private PendingIntent intent;

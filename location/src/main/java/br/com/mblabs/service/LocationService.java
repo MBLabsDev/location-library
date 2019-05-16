@@ -33,12 +33,11 @@ public abstract class LocationService extends Service {
     private final List<LocationListener> locationListeners = Arrays.asList(
             new LocationListener(LocationManager.GPS_PROVIDER),
             new LocationListener(LocationManager.NETWORK_PROVIDER));
+
     private LocationManager locationManager;
     private List<LocationServiceListener> locationServiceListenerList = new ArrayList<>();
 
-    private final Handler handlerScheduler = new Handler(message -> false);
-
-    private Runnable stopTrackingEventRunnable = this::sendOnTrackingStopEvents;
+    protected abstract boolean isDebugMode();
 
     protected abstract int getForegroundId();
 
@@ -69,9 +68,7 @@ public abstract class LocationService extends Service {
     }
 
     private void removeTrackingServiceListener() {
-        if (LocationService.this.locationServiceListenerList.contains(removeLocationServiceListener())) {
-            LocationService.this.locationServiceListenerList.remove(removeLocationServiceListener());
-        }
+        LocationService.this.locationServiceListenerList.remove(removeLocationServiceListener());
     }
 
     private void sendOnLocationChangedEvents(final Location location) {
@@ -82,13 +79,13 @@ public abstract class LocationService extends Service {
         }
     }
 
-    private void sendOnTrackingStartedEvents() {
+    private void sendOnTrackingStarted() {
         for (LocationServiceListener listener : locationServiceListenerList) {
             listener.onTrackingStarted();
         }
     }
 
-    private void sendOnTrackingStopEvents() {
+    private void sendOnTrackingStop() {
         for (LocationServiceListener listener : locationServiceListenerList) {
             listener.onTrackingStop();
         }
@@ -109,7 +106,7 @@ public abstract class LocationService extends Service {
     @Override
     public final int onStartCommand(final Intent intent, final int flags, final int startId) {
         super.onStartCommand(intent, flags, startId);
-        logService(" onStartCommand");
+        logService("onStartCommand");
         startForeground();
         return START_STICKY;
     }
@@ -117,22 +114,23 @@ public abstract class LocationService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        logService(" onCreate");
+        logService("onCreate");
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getTag());
         handleSleepMode();
         LocationService.this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         requestLocationUpdates(getMinTime(), getMinDistance());
         addTrackingServiceListener();
+        sendOnTrackingStarted();
     }
 
     @Override
     public void onDestroy() {
-        logService(" onDestroy");
-        LocationService.this.handlerScheduler.removeCallbacks(LocationService.this.stopTrackingEventRunnable);
+        logService("onDestroy");
         removeLocationUpdates();
         removeTrackingServiceListener();
         stopForeground(true);
+        sendOnTrackingStop();
         super.onDestroy();
     }
 
@@ -153,7 +151,8 @@ public abstract class LocationService extends Service {
 
     private void startForeground() {
         final ForegroundNotification notification = getForegroundNotificationSpec();
-        final NotificationCompat.Builder builder = Notification.getBuilder(this, Notification.CHANNEL_DEFAULT, Notification.IMPORTANCE_DEFAULT);
+        final NotificationCompat.Builder builder = Notification.getBuilder(
+                this, Notification.CHANNEL_DEFAULT, Notification.IMPORTANCE_DEFAULT);
 
         builder.setOngoing(notification.isOngoing())
                 .setContentTitle(notification.getTitle())
@@ -189,25 +188,27 @@ public abstract class LocationService extends Service {
     protected final void handleSleepMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
             if (!powerManager.isInteractive() && !wakeLock.isHeld()) {
-                Log.i(getTag(), "Acquire lock");
+                logService("Acquire lock");
                 wakeLock.acquire();
             } else if (powerManager.isInteractive() && wakeLock.isHeld()) {
-                Log.i(getTag(), "Release lock");
+                logService("Release lock");
                 wakeLock.release();
             }
         } else {
             if (!powerManager.isScreenOn() && !wakeLock.isHeld()) {
-                Log.i(getTag(), "Acquire lock");
+                logService("Acquire lock");
                 wakeLock.acquire();
             } else if (powerManager.isScreenOn() && wakeLock.isHeld()) {
-                Log.i(getTag(), "Release lock");
+                logService("Release lock");
                 wakeLock.release();
             }
         }
     }
 
-    private void logService(final String eventLifecycle) {
-        Log.i(getTag(), getTag() + eventLifecycle);
+    private void logService(final String message) {
+        if (isDebugMode()) {
+            Log.i(getTag(), message);
+        }
     }
 
     private void requestLocationUpdates(final long minTime, final long minDistance) {
@@ -217,9 +218,9 @@ public abstract class LocationService extends Service {
                         locationListener.getProvider(), minTime, minDistance,
                         locationListener);
             } catch (SecurityException ex) {
-                Log.e(TAG, "Fail to request location update, ignore", ex);
+                logService("Fail to request location update, ignore: " + ex.getMessage());
             } catch (Exception ex) {
-                Log.e(TAG, "Fail to request location update, ignore", ex);
+                logService("Fail to request location update, ignore: " + ex.getMessage());
             }
         }
     }
@@ -229,7 +230,7 @@ public abstract class LocationService extends Service {
             try {
                 LocationService.this.locationManager.removeUpdates(locationListener);
             } catch (Exception ex) {
-                Log.e(TAG, "Fail to remove location provider, ignore", ex);
+                logService("Fail to remove location provider, ignore: " + ex.getMessage());
             }
         }
     }
@@ -248,13 +249,12 @@ public abstract class LocationService extends Service {
 
         @Override
         public void onLocationChanged( final Location location) {
-            Log.d(TAG, location.getLatitude() + "/" + location.getLongitude());
             sendOnLocationChangedEvents(location);
         }
 
         @Override
         public void onProviderDisabled(final String provider) {
-            Log.d(TAG, provider);
+            logService(provider);
             if (provider.equals(LocationManager.GPS_PROVIDER)) {
                 sendOnGpsProviderDisabled();
             }
@@ -262,7 +262,7 @@ public abstract class LocationService extends Service {
 
         @Override
         public void onProviderEnabled(final String provider) {
-            Log.d(TAG, provider);
+            logService(provider);
             if (provider.equals(LocationManager.GPS_PROVIDER)) {
                 sendOnGpsProviderEnabled();
             }
@@ -270,8 +270,8 @@ public abstract class LocationService extends Service {
 
         @Override
         public void onStatusChanged(final String provider, final int status, final Bundle extras) {
-            Log.d(TAG, provider + " " + status + " " + extras.toString());
-            Log.i(TAG, "onStatusChanged: " + provider + " " + convertProviderStatus(status));
+            logService(provider + " " + status + " " + extras.toString());
+            logService("onStatusChanged: " + provider + " " + convertProviderStatus(status));
         }
 
         private String convertProviderStatus(final int status) {
