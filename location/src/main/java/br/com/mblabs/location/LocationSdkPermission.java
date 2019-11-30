@@ -6,7 +6,7 @@ public interface LocationSdkPermission {
 
     void onPermissionDenied(String permission);
 
-    void onShouldRequestPermissionRationale( String permission);
+    void onShouldRequestPermissionRationale(String permission);
 
-    void onNeverAskAgain( String permission);
+    void onNeverAskAgain(String permission);
 }

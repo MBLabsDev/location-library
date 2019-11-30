@@ -2,6 +2,7 @@ package br.com.example;
 
 import android.location.Location;
 import android.util.Log;
+
 import br.com.mblabs.service.LocationService;
 import br.com.mblabs.service.LocationServiceListener;
 
@@ -11,7 +12,7 @@ public class AppTestLocationService extends LocationService {
 
     LocationServiceListener locationServiceListener = new LocationServiceListener() {
         @Override
-        public void onGpsProviderDisabled( String message) {
+        public void onGpsProviderDisabled(String message) {
             Log.d(TAG, "onGpsProviderDisabled - " + message);
         }
 
@@ -21,7 +22,7 @@ public class AppTestLocationService extends LocationService {
         }
 
         @Override
-        public void onLocationChanged( Location location) {
+        public void onLocationChanged(Location location) {
             Log.d(TAG, "onLocationChanged - " + location.getLatitude() + " / " + location.getLongitude());
         }
 
@@ -37,6 +38,11 @@ public class AppTestLocationService extends LocationService {
     };
 
     @Override
+    protected boolean isDebugMode() {
+        return false;
+    }
+
+    @Override
     protected int getForegroundId() {
         return 12345678;
     }
@@ -46,13 +52,13 @@ public class AppTestLocationService extends LocationService {
         return 50;
     }
 
-    
+
     @Override
     protected String getNotificationTitle() {
         return "Notification Title test";
     }
 
-    
+
     @Override
     protected String getNotificationText() {
         return "Notification Text test";
@@ -68,7 +74,7 @@ public class AppTestLocationService extends LocationService {
         return R.drawable.ic_launcher_foreground;
     }
 
-    
+
     @Override
     protected String getActionTracking() {
         return "ACTION_TRACKING";

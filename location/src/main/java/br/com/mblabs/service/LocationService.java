@@ -1,20 +1,33 @@
 package br.com.mblabs.service;
 
+import android.annotation.TargetApi;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.*;
+import android.os.Binder;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import br.com.mblabs.Notification;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import br.com.mblabs.Notification;
+
+import static br.com.mblabs.location.LocationAPI.START_FOREGROUND_ACTION;
+import static br.com.mblabs.location.LocationAPI.STOP_FOREGROUND_ACTION;
+import static br.com.mblabs.location.LocationAPI.UPDATE_LOCATION_UPDATES;
 
 /**
  * Responsible for the services related to the location of the driver. Your responsibilities are:<br>
@@ -24,6 +37,9 @@ import java.util.List;
 public abstract class LocationService extends Service {
 
     private static final String TAG = LocationService.class.getSimpleName();
+
+    private static final String ANDROID_CHANNEL_SERVICE_ID = "location_service";
+    private static final String ANDROID_CHANNEL_SERVICE = "Serviço de localização";
 
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
@@ -107,9 +123,24 @@ public abstract class LocationService extends Service {
     public final int onStartCommand(final Intent intent, final int flags, final int startId) {
         super.onStartCommand(intent, flags, startId);
         logService("onStartCommand");
-        startForeground();
+
+        if (intent != null && START_FOREGROUND_ACTION.equals(intent.getAction())) {
+            Log.i(TAG, "Received Start Foreground Intent ");
+            startForeground();
+
+        } else if (intent != null && UPDATE_LOCATION_UPDATES.equals(intent.getAction())) {
+            Log.i(TAG, "Update location settings");
+            updateLocationSettings();
+            startForeground();
+
+        } else if (intent != null && STOP_FOREGROUND_ACTION.equals(intent.getAction())) {
+            Log.i(TAG, "Received Stop Foreground Intent");
+            stopForeground(true);
+            stopSelf();
+        }
         return START_STICKY;
     }
+
 
     @Override
     public void onCreate() {
@@ -122,6 +153,11 @@ public abstract class LocationService extends Service {
         requestLocationUpdates(getMinTime(), getMinDistance());
         addTrackingServiceListener();
         sendOnTrackingStarted();
+    }
+
+    private void updateLocationSettings() {
+        LocationService.this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        requestLocationUpdates(getMinTime(), getMinDistance());
     }
 
     @Override
@@ -152,7 +188,7 @@ public abstract class LocationService extends Service {
     private void startForeground() {
         final ForegroundNotification notification = getForegroundNotificationSpec();
         final NotificationCompat.Builder builder = Notification.getBuilder(
-                this, Notification.CHANNEL_DEFAULT, Notification.IMPORTANCE_DEFAULT);
+                this, notification.getChannelName(), notification.getChannel());
 
         builder.setOngoing(notification.isOngoing())
                 .setContentTitle(notification.getTitle())
@@ -167,6 +203,20 @@ public abstract class LocationService extends Service {
         startForeground(notification.getId(), builder.build());
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
+    public NotificationChannel getForegroundNotificationChannel() {
+        NotificationChannel channelService = new NotificationChannel(
+                ANDROID_CHANNEL_SERVICE_ID,
+                ANDROID_CHANNEL_SERVICE,
+                NotificationManager.IMPORTANCE_LOW);
+
+        channelService.enableLights(true);
+        channelService.enableVibration(false);
+        channelService.setLightColor(Color.GREEN);
+        channelService.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+        return channelService;
+    }
+
     protected ForegroundNotification getForegroundNotificationSpec() {
         ForegroundNotification notification = new ForegroundNotification();
         notification.setId(getForegroundId());
@@ -174,6 +224,11 @@ public abstract class LocationService extends Service {
         notification.setTitle(getNotificationTitle());
         notification.setResourceId(getNotificationSmallIcon());
         notification.setColor(ContextCompat.getColor(this, getNotificationColor()));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notification.setChannel(getForegroundNotificationChannel());
+            notification.setChannelName(ANDROID_CHANNEL_SERVICE_ID);
+        }
 
         final Intent intent = new Intent();
         intent.setAction(getApplicationContext().getPackageName() + getActionTracking());
@@ -248,7 +303,7 @@ public abstract class LocationService extends Service {
         }
 
         @Override
-        public void onLocationChanged( final Location location) {
+        public void onLocationChanged(final Location location) {
             sendOnLocationChangedEvents(location);
         }
 

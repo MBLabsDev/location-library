@@ -18,6 +18,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+    }
+
+    override fun onResume() {
+        super.onResume()
         checkLocationNecessarySettings()
     }
 
@@ -28,10 +32,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onDeviceSettingsReady() {
-                ContextCompat.startForegroundService(
-                    this@MainActivity,
-                    Intent(this@MainActivity, AppTestLocationService::class.java)
-                )
+                LocationAPI.startService(this@MainActivity, AppTestLocationService::class.java);
             }
 
         }, "Your title here", "Your message here", "OK")

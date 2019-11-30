@@ -4,11 +4,11 @@ import android.location.Location;
 
 public interface LocationServiceListener {
 
-    void onGpsProviderDisabled( String message);
+    void onGpsProviderDisabled(String message);
 
     void onGpsProviderEnabled();
 
-    void onLocationChanged( Location location);
+    void onLocationChanged(Location location);
 
     void onTrackingStarted();
 

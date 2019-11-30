@@ -1,5 +1,6 @@
 package br.com.mblabs.service;
 
+import android.app.NotificationChannel;
 import android.app.PendingIntent;
 
 public class ForegroundNotification {
@@ -11,6 +12,8 @@ public class ForegroundNotification {
     private int id;
     private boolean ongoing;
     private int color;
+    private NotificationChannel channel;
+    private String channelName;
 
     public String getTitle() {
         return title;
@@ -66,5 +69,21 @@ public class ForegroundNotification {
 
     public int getColor() {
         return color;
+    }
+
+    public void setChannel(NotificationChannel channel) {
+        this.channel = channel;
+    }
+
+    public NotificationChannel getChannel() {
+        return channel;
+    }
+
+    public String getChannelName() {
+        return channelName;
+    }
+
+    public void setChannelName(String channelName) {
+        this.channelName = channelName;
     }
 }
