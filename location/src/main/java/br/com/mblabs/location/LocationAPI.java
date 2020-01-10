@@ -89,16 +89,21 @@ public class LocationAPI {
                                                       final String title,
                                                       final String message,
                                                       final String positiveButtonText) {
+
         if (!hasNecessaryPermissions(activity.getBaseContext())) {
             requestLocationPermissions(activity,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION});
-        } else if (!hasGpsDevice(activity.getBaseContext())) {
+
+        } else if (!hasGpsDevice(activity.getBaseContext()) && listener != null) {
             listener.onDeviceNotSupportGps();
+
         } else if (!isProviderEnabled(activity.getBaseContext(), LocationManager.GPS_PROVIDER)) {
             GpsProviderEnableDialog.enableGpsProvider(activity);
+
         } else if (!isIgnoringBatteryOptimizations(activity.getBaseContext())) {
             checkIgnoringBatteryOptimizations(activity, title, message, positiveButtonText);
-        } else {
+
+        } else if(listener != null) {
             listener.onDeviceSettingsReady();
         }
     }
