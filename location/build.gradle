@@ -17,7 +17,7 @@ ext {
     siteUrl = 'https://github.com/MBLabsDev/location-library'
     gitUrl = 'https://github.com/MBLabsDev/location-library.git'
 
-    libraryVersion = '1.0.0'
+    libraryVersion = '1.0.1'
 
     developerId = 'bintray-teomoreiras-maven'
     developerName = 'teomoreiras'

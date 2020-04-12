@@ -230,10 +230,10 @@ public abstract class LocationService extends Service {
             notification.setChannelName(ANDROID_CHANNEL_SERVICE_ID);
         }
 
-        final Intent intent = new Intent();
-        intent.setAction(getApplicationContext().getPackageName() + getActionTracking());
-        final PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0,
-                intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        Intent launchIntent = getPackageManager()
+                .getLaunchIntentForPackage(getApplicationContext().getPackageName());
+        final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                launchIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
         notification.setIntent(pendingIntent);
         notification.setOngoing(true);
